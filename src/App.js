@@ -1,58 +1,58 @@
-import React, { Component } from 'react';
-import './App.css';
-
-// API
-import * as ContactsAPI from './utils/ContactsAPI';
-
-// Components
-import ListContacts from './ListContacts';
+import React, { Component } from 'react'
+import ListContacts from './ListContacts'
+import * as ContactsAPI from './utils/ContactsAPI'
 import CreateContact from './CreateContact'
+import { Route } from 'react-router-dom'
 
 class App extends Component {
   state = {
-    contacts: [],
-    screen: 'list'
-  };
-
-  // ajax req
-  componentDidMount() {
-    ContactsAPI.getAll().then((contacts) => {
-      this.setState(() => ({ contacts }));
-    })
+    contacts: []
   }
-
+  componentDidMount() {
+    ContactsAPI.getAll()
+      .then((contacts) => {
+        this.setState(() => ({
+          contacts
+        }))
+      })
+  }
   removeContact = (contact) => {
-    this.setState((prevState) => ({
-      contacts: prevState.contacts.filter((c) => {
+    this.setState((currentState) => ({
+      contacts: currentState.contacts.filter((c) => {
         return c.id !== contact.id
       })
-    }));
+    }))
 
-    // remove from backend
-    ContactsAPI.remove(contact);
+    ContactsAPI.remove(contact)
   }
-
+  createContact = (contact) => {
+    ContactsAPI.create(contact)
+      .then((contact) => {
+        this.setState((currentState) => ({
+          contacts: currentState.contacts.concat([contact])
+        }))
+      })
+  }
   render() {
     return (
       <div>
-        {/* short-circuit evaluation */}
-        {this.state.screen === 'list' && (
+        <Route exact path='/' render={() => (
           <ListContacts
             contacts={this.state.contacts}
             onDeleteContact={this.removeContact}
-            onNavigate={() => {
-              this.setState( () => ({
-                screen: 'create'
-              }))
+          />
+        )} />
+        <Route path='/create' render={({ history }) => (
+          <CreateContact
+            onCreateContact={(contact) => {
+              this.createContact(contact)
+              history.push('/')
             }}
           />
-        )}
-        {this.state.screen === 'create' && (
-          <CreateContact />
-        )}
+        )} />
       </div>
-    );
+    )
   }
 }
 
-export default App;
+export default App
